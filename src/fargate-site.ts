@@ -77,7 +77,7 @@ export class FargateSite extends Construct {
 
 
     // TLS certificate
-    const certificate = new acm.Certificate(this, 'SiteCertificate', {
+    const certificate = new acm.Certificate(this, 'Certificate-'+siteDomain, {
       domainName: siteDomain,
       validation: acm.CertificateValidation.fromDns(zone),
     });
@@ -93,7 +93,7 @@ export class FargateSite extends Construct {
 
     
     // IAM Roles for ECS Execution and Task IAM
-    const executionRole = new Role(this, 'ExecutionRole-' + siteDomain, {
+    const executionRole = new Role(this, 'ExecutionRole-' + subDomain, {
       assumedBy: new ServicePrincipal('ecs-tasks.amazonaws.com'),
       managedPolicies: [
         ManagedPolicy.fromAwsManagedPolicyName('service-role/AmazonECSTaskExecutionRolePolicy')
@@ -109,7 +109,7 @@ export class FargateSite extends Construct {
         ]
       })
     );
-    const taskRole = new Role(this, 'TaskRole-' + siteDomain, {
+    const taskRole = new Role(this, 'TaskRole-' + subDomain, {
       assumedBy: new ServicePrincipal('ecs-tasks.amazonaws.com'),
     });
     taskRole.addToPolicy(
@@ -163,7 +163,7 @@ export class FargateSite extends Construct {
     // Create EFS filesystems and ECS Volume mounts
     const volumes: ecs.Volume[] = [];
     const fileSystems = Object.keys(props.volumeMounts).map((key) => {
-      const fileSystem = new efs.FileSystem(this, 'EfsFileSystem'+key, {
+      const fileSystem = new efs.FileSystem(this, 'EfsFileSystem-'+key, {
         fileSystemName: key,
         vpc: vpc,
         encrypted: true,
