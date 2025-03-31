@@ -230,6 +230,7 @@ export class FargateSite extends Construct {
         securityGroups: [tasksSecurityGroup],
         desiredCount: scale,
         assignPublicIp: true,
+        enableExecuteCommand: true,
       });
     service.registerLoadBalancerTargets(
       {
