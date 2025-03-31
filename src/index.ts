@@ -50,19 +50,8 @@ class FargateStack extends cdk.Stack {
             environment['DB_USER'] = postgres.username;
             environment['DB_TYPE'] = dbType;
             secrets['DB_PASSWD'] = dbSecret;
-
-            // environment['GITEA__database__USER'] = postgres.username
-            // environment['GITEA__database__DB_TYPE'] = dbType;
-            // environment['GITEA__database__NAME'] = postgres.databaseName;
-            // environment['GITEA__database__HOST'] = postgres.host;
-            // secrets['GITEA__database__PASSWD'] = dbSecret;        
-
-            // environment['GITEA_ADMIN_USERNAME'] = 'kim';
-            // environment['GITEA_ADMIN_EMAIL'] = 'kim@fireclover.cloud';
-
-            // secrets['GITEA_ADMIN_PASSWORD'] = dbSecret;
         }
-        const generateSecret = (template: object, generateStringKey = 'password', excludeCharacters = '/@":') => { 
+        const generateSecret = (template = {}, generateStringKey = 'password', excludeCharacters = '/@":') => { 
             return { secretStringTemplate: JSON.stringify(template), generateStringKey, excludeCharacters };
         };
         if (secrets) {
@@ -71,7 +60,7 @@ class FargateStack extends cdk.Stack {
                     ? typeof(secrets[key]) == 'string' 
                         ? secretsmanager.Secret.fromSecretCompleteArn(this, key, secrets[key])
                         : new secretsmanager.Secret(this, key, { generateSecretString: generateSecret(secrets[key]) })
-                    : new secretsmanager.Secret(this, key, { generateSecretString: generateSecret({}) }) 
+                    : new secretsmanager.Secret(this, key, { generateSecretString: generateSecret({username: key}) }) 
             });
         }
 
