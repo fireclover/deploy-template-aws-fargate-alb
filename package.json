@@ -1,0 +1,33 @@
+{
+  "name": "static-site",
+  "version": "1.0.0",
+  "description": "Infrastructure for an HTTPS static site using S3 and CloudFront",
+  "scripts": {
+    "clean:all": "rm -rf token cdk.out dist cdk.context.json",
+    "clean": "rm -rf token cdk.out dist",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk",
+    "get-token": "curl -u 'fc-gitea' -H 'content-type: application/json' 'https://login.ms.fireclover.cloud/oauth2/token' -d '{\"grant_type\":\"client_credentials\"}' |jq -r '.access_token' > token",
+    "assume-role-output": "aws sts assume-role-with-web-identity --role-arn arn:aws:iam::421954349913:role/FireCloverAdmin --role-session-name npm-test --web-identity-token $(cat token)",
+    "assume-role": "export AWS_ROLE_ARN=arn:aws:iam::421954349913:role/FireCloverAdmin && export AWS_ROLE_SESSION_NAME=npm-test && export AWS_WEB_IDENTITY_TOKEN_FILE=token",
+    "assume-role-profile": "echo '[default]\nrole_arn=arn:aws:iam::243729829223:role/FireCloverAdmin\nweb_identity_token_file='$(pwd)'/token' > ~/.aws/config",
+    "test": "npm run cdk deploy -- --require-approval=never -c subdomain=test-fargate10",
+    "test:integ": "npm run clean && npm run build && npm run get-token && npm run assume-role-profile && npm run test"    
+  },
+  "author": {
+    "name": "FireClover",
+    "url": "https://fireclover.no",
+    "organization": true
+  },
+  "devDependencies": {
+    "aws-cdk-lib": "^2.181.1",
+    "constructs": "^10.4.2",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "@aws-solutions-constructs/aws-alb-fargate": "^2.81.0",
+    "@types/node": "^22.13.9",
+    "aws-cdk": "^2.1002.0"
+  }
+}

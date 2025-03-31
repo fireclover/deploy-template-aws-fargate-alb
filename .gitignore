@@ -1,3 +1,7 @@
+cdk.context.json
+cdk.out
+token
+
 # Logs
 logs
 *.log
