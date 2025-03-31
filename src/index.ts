@@ -37,7 +37,21 @@ class FargateStack extends cdk.Stack {
         const secrets = this.node.tryGetContext('secrets') || {};
         const dbEnvMap = this.node.tryGetContext('dbEnvMap') || {};
         const dbSecretsMap = this.node.tryGetContext('dbSecretsMap') || {};
-        
+
+
+        if (this.node.tryGetContext('secrets')) {
+            const generateSecret = (template = {}, generateStringKey = 'password', excludeCharacters = '/@":') => { 
+                return { secretStringTemplate: JSON.stringify(template), generateStringKey, excludeCharacters };
+            };            
+            for (const [key, value] of Object.entries(secrets)) { 
+              secrets[key] = value
+                    ? typeof(value) == 'string' 
+                        ? secretsmanager.Secret.fromSecretCompleteArn(this, key, value)
+                        : new secretsmanager.Secret(this, key, { generateSecretString: generateSecret(value) })
+                    : new secretsmanager.Secret(this, key, { generateSecretString: generateSecret() })
+            };
+        }
+
         const dbType = this.node.tryGetContext('dbType');
         if (dbType == 'postgres') {            
             const postgres = new Postgres(this, serviceName + 'Postgres', { vpc, username, databaseName });
@@ -50,18 +64,6 @@ class FargateStack extends cdk.Stack {
             environment['DB_USER'] = postgres.username;
             environment['DB_TYPE'] = dbType;
             secrets['DB_PASSWD'] = dbSecret;
-        }
-        const generateSecret = (template = {}, generateStringKey = 'password', excludeCharacters = '/@":') => { 
-            return { secretStringTemplate: JSON.stringify(template), generateStringKey, excludeCharacters };
-        };
-        if (secrets) {
-            Object.keys(secrets).every((key: string) => { 
-                secrets[key] = secrets[key] 
-                    ? typeof(secrets[key]) == 'string' 
-                        ? secretsmanager.Secret.fromSecretCompleteArn(this, key, secrets[key])
-                        : new secretsmanager.Secret(this, key, { generateSecretString: generateSecret(secrets[key]) })
-                    : new secretsmanager.Secret(this, key, { generateSecretString: generateSecret({username: key}) }) 
-            });
         }
 
         if (dbEnvMap) for (const [key, value] of Object.entries(dbEnvMap)) { environment[key] = environment[`${value}`] };
