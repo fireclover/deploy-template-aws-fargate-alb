@@ -33,6 +33,7 @@ Use `npm run cdk deploy -- -c attribute=value` or **cdk.context.json** to set th
   "cpu": 512,
   "registryCredentials": "arn:aws:secretsmanager:us-east-1:243729829223:secret:ghcr.io-JoGypq",
   "domain": "fireclover.aws.fireclover.cloud",
+  "subdomain": "test-fargate",
   "accountId": 243729829223,
   "containerImage": "ghcr.io/fireclover/gitea:dev"
 }
