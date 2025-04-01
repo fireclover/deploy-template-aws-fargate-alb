@@ -42,13 +42,20 @@ class FargateStack extends cdk.Stack {
         if (this.node.tryGetContext('secrets')) {
             const generateSecret = (template = {}, generateStringKey = 'password', excludeCharacters = '/@":') => { 
                 return { secretStringTemplate: JSON.stringify(template), generateStringKey, excludeCharacters };
-            };            
+            };
+            const getOrGenerateSecret = (key: string) => {
+                try { return secretsmanager.Secret.fromSecretNameV2(this, key, key) }
+                catch { return new secretsmanager.Secret(this, key, { secretName: key, generateSecretString: generateSecret() }) }
+            }
+            
             for (const [key, value] of Object.entries(secrets)) { 
-              secrets[key] = value
-                    ? typeof(value) == 'string' 
+              secrets[key] = !value
+                    ? getOrGenerateSecret(key)
+                    : typeof(value) == 'string' && value.includes("arn")
                         ? secretsmanager.Secret.fromSecretCompleteArn(this, key, value)
-                        : new secretsmanager.Secret(this, key, { generateSecretString: generateSecret(value) })
-                    : new secretsmanager.Secret(this, key, { generateSecretString: generateSecret() })
+                        : typeof(value) == 'object'
+                            ? new secretsmanager.Secret(this, key, { secretName: key, generateSecretString: generateSecret(value) })
+                            : new secretsmanager.Secret(this, key, { secretName: key, generateSecretString: generateSecret() });
             };
         }
 
