@@ -71,7 +71,8 @@ class FargateStack extends cdk.Stack {
         
         new FargateSite(this, serviceName, {
             vpc,
-            region,            
+            region,
+            serviceName,
             domainName: this.node.tryGetContext('domain'),
             siteSubDomain: this.node.tryGetContext('subdomain'),
             registryCredentials: this.node.tryGetContext('registryCredentials'),

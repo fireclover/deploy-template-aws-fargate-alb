@@ -22,6 +22,7 @@ import {
 export interface FargateSiteProps {
   domainName: string;
   siteSubDomain: string;
+  serviceName: string;
   containerImage: string;
   registryCredentials: string;
   containerPort: string;
@@ -49,6 +50,7 @@ export class FargateSite extends Construct {
     const zone = route53.HostedZone.fromLookup(this, 'Zone', { domainName: props.domainName });
     const subDomain = props.siteSubDomain;
     const siteDomain = subDomain + '.' + props.domainName;
+    const serviceName = props.serviceName;
     const registryCredentials = props.registryCredentials;
     const containerImage = props.containerImage;
     const containerPort = parseInt(props.containerPort);
@@ -93,7 +95,7 @@ export class FargateSite extends Construct {
 
     
     // IAM Roles for ECS Execution and Task IAM
-    const executionRole = new Role(this, 'ExecutionRole-' + subDomain, {
+    const executionRole = new Role(this, 'ExecutionRole-' + serviceName, {
       assumedBy: new ServicePrincipal('ecs-tasks.amazonaws.com'),
       managedPolicies: [
         ManagedPolicy.fromAwsManagedPolicyName('service-role/AmazonECSTaskExecutionRolePolicy')
@@ -109,7 +111,7 @@ export class FargateSite extends Construct {
         ]
       })
     );
-    const taskRole = new Role(this, 'TaskRole-' + subDomain, {
+    const taskRole = new Role(this, 'TaskRole-' + serviceName, {
       assumedBy: new ServicePrincipal('ecs-tasks.amazonaws.com'),
     });
     if (secretArns) taskRole.addToPolicy(
@@ -127,14 +129,14 @@ export class FargateSite extends Construct {
     // Tasks and ALB security groups
     const tasksSecurityGroup = new SecurityGroup(this, 'TaskSecurityGroup', 
       { 
-        securityGroupName: props.siteSubDomain + 'TaskSecurityGroup', 
+        securityGroupName: serviceName + 'TaskSecurityGroup', 
         vpc, 
         allowAllOutbound: true, 
       });
     tasksSecurityGroup.addIngressRule(Peer.anyIpv4(), Port.tcp(containerPort));
     const albSecurityGroup = new SecurityGroup(this, 'ALBSecurityGroup', 
       { 
-        securityGroupName: props.siteSubDomain + 'ALBSecurityGroup', 
+        securityGroupName: serviceName + 'ALBSecurityGroup', 
         vpc, 
         allowAllOutbound: true, 
       });
@@ -143,7 +145,7 @@ export class FargateSite extends Construct {
 
     // Create the ALB with HTTP to HTTPS redirect and listeners
     const alb = new ApplicationLoadBalancer(this, 'ALB', {
-      loadBalancerName: subDomain + 'ALB',
+      loadBalancerName: serviceName + 'ALB',
       vpc,
       internetFacing: true,
       securityGroup: albSecurityGroup,
@@ -154,7 +156,7 @@ export class FargateSite extends Construct {
 
     // Create the ECS cluster
     const cluster = new ecs.Cluster(this, 'Cluster', { 
-      clusterName: subDomain + 'Cluster',  
+      clusterName: serviceName + 'Cluster',  
       containerInsights: false,
       enableFargateCapacityProviders: true,
       vpc,
@@ -221,9 +223,9 @@ export class FargateSite extends Construct {
     };
 
     // Setup the ECS Service
-    const service = new ecs.FargateService(this, subDomain + 'Service', 
+    const service = new ecs.FargateService(this, serviceName + 'Service', 
       { 
-        serviceName: subDomain,
+        serviceName: serviceName,
         cluster, 
         taskDefinition: fargateTaskDefinition,
         minHealthyPercent: 100,
@@ -237,7 +239,7 @@ export class FargateSite extends Construct {
         containerName: 'web',
         containerPort: containerPort,
         protocol: ecs.Protocol.TCP,
-        newTargetGroupId: subDomain + 'ECS',
+        newTargetGroupId: serviceName + 'ECS',
         listener: ecs.ListenerConfig.applicationListener(httpsListener, {
           protocol: ApplicationProtocol.HTTP,
           healthCheck: {
