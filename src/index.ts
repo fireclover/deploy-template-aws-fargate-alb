@@ -89,8 +89,9 @@ class FargateStack extends cdk.Stack {
 }
 
 const app = new cdk.App();
+const serviceName = app.node.tryGetContext('serviceName') || app.node.tryGetContext('subdomain') || 'fargateapp';
 
-new FargateStack(app, `FargateSite-${app.node.tryGetContext('subdomain')}`, {
+new FargateStack(app, 'FargateSite-'+serviceName, {
     /**
      * This is required for our use of hosted-zone lookup.
      *
