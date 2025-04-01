@@ -209,7 +209,8 @@ export class FargateSite extends Construct {
       taskDefinition: fargateTaskDefinition,
       environment,
       secrets,
-      portMappings: [{ containerPort }]
+      portMappings: [{ containerPort }],
+      logging: ecs.LogDriver.awsLogs,
     });
 
     for (const [key, value] of Object.entries(props.volumeMounts)) {
