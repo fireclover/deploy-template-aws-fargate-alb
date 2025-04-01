@@ -210,7 +210,9 @@ export class FargateSite extends Construct {
       environment,
       secrets,
       portMappings: [{ containerPort }],
-      logging: ecs.LogDriver.awsLogs,
+      logging: ecs.LogDriver.awsLogs({
+        streamPrefix: ''
+      }),
     });
 
     for (const [key, value] of Object.entries(props.volumeMounts)) {
