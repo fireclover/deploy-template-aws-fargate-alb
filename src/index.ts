@@ -38,26 +38,25 @@ class FargateStack extends cdk.Stack {
         const dbEnvMap = this.node.tryGetContext('dbEnvMap') || {};
         const dbSecretsMap = this.node.tryGetContext('dbSecretsMap') || {};
 
+        const generateSecret = (template = {}, generateStringKey = 'password', excludeCharacters = '/@":') => { 
+            return { secretStringTemplate: JSON.stringify(template), generateStringKey, excludeCharacters };
+        };
+        const getOrGenerateSecret = (key: string) => {
+            try { return secretsmanager.Secret.fromSecretNameV2(this, serviceName + 'importedSecret' + key, key) }
+            catch { return new secretsmanager.Secret(this, serviceName + 'Secret' + key, { secretName: key, generateSecretString: generateSecret() }) }
+        }
 
-        if (this.node.tryGetContext('secrets')) {
-            const generateSecret = (template = {}, generateStringKey = 'password', excludeCharacters = '/@":') => { 
-                return { secretStringTemplate: JSON.stringify(template), generateStringKey, excludeCharacters };
-            };
-            const getOrGenerateSecret = (key: string) => {
-                try { return secretsmanager.Secret.fromSecretNameV2(this, key, key) }
-                catch { return new secretsmanager.Secret(this, key, { secretName: key, generateSecretString: generateSecret() }) }
-            }
-            
+        if (this.node.tryGetContext('secrets')) {            
             for (const [key, value] of Object.entries(secrets)) { 
               secrets[key] = !value
                     ? getOrGenerateSecret(key)
                     : typeof(value) == 'string' && value.includes("arn")
-                        ? secretsmanager.Secret.fromSecretCompleteArn(this, key, value)
+                        ? secretsmanager.Secret.fromSecretCompleteArn(this, serviceName + 'importedArnSecret' + key, value)
                         : typeof(value) == 'object'
-                            ? new secretsmanager.Secret(this, key, { secretName: key, generateSecretString: generateSecret(value) })
-                            : new secretsmanager.Secret(this, key, { secretName: key, generateSecretString: generateSecret() });
+                            ? new secretsmanager.Secret(this, serviceName + 'Secret' + key, { secretName: key, generateSecretString: generateSecret(value) })
+                            : new secretsmanager.Secret(this, serviceName + 'Secret' + key, { secretName: key, generateSecretString: generateSecret() });
             };
-        }
+        };
 
         const dbType = this.node.tryGetContext('dbType');
         if (dbType == 'postgres') {            
