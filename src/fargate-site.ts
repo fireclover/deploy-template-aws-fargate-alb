@@ -99,7 +99,7 @@ export class FargateSite extends Construct {
         ManagedPolicy.fromAwsManagedPolicyName('service-role/AmazonECSTaskExecutionRolePolicy')
       ],      
     });
-    executionRole.addToPolicy(
+    if (registryCredentials) executionRole.addToPolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,
         resources: [registryCredentials],
@@ -112,7 +112,7 @@ export class FargateSite extends Construct {
     const taskRole = new Role(this, 'TaskRole-' + subDomain, {
       assumedBy: new ServicePrincipal('ecs-tasks.amazonaws.com'),
     });
-    taskRole.addToPolicy(
+    if (secretArns) taskRole.addToPolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,
         // resources: ['*'],
