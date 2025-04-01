@@ -65,10 +65,10 @@ export class FargateSite extends Construct {
 
     // Using default vpc, but should likely be using private subnets in new vpc 
     const vpc = props.vpc;
-    const secretArns = [registryCredentials];
+    const secretsArns = [registryCredentials];
     for (const [key, value] of Object.entries(props.secrets)) { 
       secrets[key] = ecs.Secret.fromSecretsManager(value, 'password');
-      secretArns.push(value.secretArn);
+      secretsArns.push(value.secretArn);
     };
     if (printSecrets) {
       for (const [key, value] of Object.entries(props.secrets)) { new CfnOutput(this, key, { value: value.secretValue.unsafeUnwrap() });}
@@ -101,10 +101,10 @@ export class FargateSite extends Construct {
         ManagedPolicy.fromAwsManagedPolicyName('service-role/AmazonECSTaskExecutionRolePolicy')
       ],      
     });
-    executionRole.addToPolicy(
+    if (secretsArns) executionRole.addToPolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,
-        resources: secretArns,
+        resources: secretsArns,
         actions: [            
           'secretsmanager:GetSecretValue',
           'secretsmanager:DescribeSecret',
@@ -114,11 +114,11 @@ export class FargateSite extends Construct {
     const taskRole = new Role(this, 'TaskRole-' + serviceName, {
       assumedBy: new ServicePrincipal('ecs-tasks.amazonaws.com'),
     });
-    taskRole.addToPolicy(
+    if (secretsArns) taskRole.addToPolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,
         // resources: ['*'],
-        resources: secretArns,
+        resources: secretsArns,
         actions: [            
           'secretsmanager:GetSecretValue',
           'secretsmanager:DescribeSecret',
