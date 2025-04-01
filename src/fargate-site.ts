@@ -211,7 +211,7 @@ export class FargateSite extends Construct {
       secrets,
       portMappings: [{ containerPort }],
       logging: ecs.LogDriver.awsLogs({
-        streamPrefix: ''
+        streamPrefix: serviceName
       }),
     });
 
