@@ -65,7 +65,7 @@ export class FargateSite extends Construct {
 
     // Using default vpc, but should likely be using private subnets in new vpc 
     const vpc = props.vpc;
-    const secretsArns = [registryCredentials];
+    const secretsArns = registryCredentials ? [registryCredentials] : [];
     for (const [key, value] of Object.entries(props.secrets)) { 
       secrets[key] = ecs.Secret.fromSecretsManager(value, 'password');
       secretsArns.push(value.secretArn);
