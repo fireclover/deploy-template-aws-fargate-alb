@@ -259,7 +259,8 @@ export class FargateSite extends Construct {
         listener: ecs.ListenerConfig.applicationListener(httpsListener, {
           protocol: ApplicationProtocol.HTTP,
           healthCheck: {
-            path: '/', 
+            path: '/',
+            healthyHttpCodes: "200-499",
           }
         }),
       },

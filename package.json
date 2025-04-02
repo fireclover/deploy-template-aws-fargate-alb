@@ -1,7 +1,7 @@
 {
-  "name": "fargate-site",
+  "name": "@fireclover/deploy-template-aws-fargate-alb",
   "version": "1.0.0",
-  "description": "Infrastructure for an HTTPS static site using S3 and CloudFront",
+  "description": "Infrastructure for an ECS Fargate Container App with VPC, EFS, ALB+TLS and Route53",
   "scripts": {
     "clean:all": "rm -rf token cdk.out dist cdk.context.json",
     "clean": "rm -rf token cdk.out dist",
