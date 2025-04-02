@@ -41,17 +41,19 @@ class FargateStack extends cdk.Stack {
         const generateSecret = (template = {}, generateStringKey = 'password', excludeCharacters = '/@":') => { 
             return { secretStringTemplate: JSON.stringify(template), generateStringKey, excludeCharacters };
         };
-        const getOrGenerateSecret = (key: string) => {
-            try { return secretsmanager.Secret.fromSecretNameV2(this, serviceName + 'importedSecret' + key, key) }
-            catch { return new secretsmanager.Secret(this, serviceName + 'Secret' + key, { secretName: key, generateSecretString: generateSecret() }) }
-        }
+        // const getOrGenerateSecret = (key: string) => {
+        //     try { return secretsmanager.Secret.fromSecretNameV2(this, serviceName + 'importedSecret' + key, key) }
+        //     catch { return new secretsmanager.Secret(this, serviceName + 'Secret' + key, { secretName: key, generateSecretString: generateSecret() }) }
+        // }
 
         if (this.node.tryGetContext('secrets')) {            
             for (const [key, value] of Object.entries(secrets)) { 
               secrets[key] = !value
-                    ? getOrGenerateSecret(key)
-                    : typeof(value) == 'string' && value.includes("arn")
-                        ? secretsmanager.Secret.fromSecretCompleteArn(this, serviceName + 'importedArnSecret' + key, value)
+                    ? new secretsmanager.Secret(this, serviceName + 'Secret' + key, { secretName: key, generateSecretString: generateSecret() })
+                    : typeof(value) == 'string'
+                        ? value.includes("arn")
+                            ? secretsmanager.Secret.fromSecretCompleteArn(this, serviceName + 'importedArnSecret' + key, value)
+                            : secretsmanager.Secret.fromSecretNameV2(this, serviceName + 'importedSecret' + key, key)
                         : typeof(value) == 'object'
                             ? new secretsmanager.Secret(this, serviceName + 'Secret' + key, { secretName: key, generateSecretString: generateSecret(value) })
                             : new secretsmanager.Secret(this, serviceName + 'Secret' + key, { secretName: key, generateSecretString: generateSecret() });
