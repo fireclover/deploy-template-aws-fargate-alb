@@ -213,6 +213,18 @@ export class FargateSite extends Construct {
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: serviceName
       }),
+      ulimits: [
+        {
+          name: ecs.UlimitName.NOFILE,
+          softLimit: 128000,
+          hardLimit: 128000
+        },
+        {
+          name: ecs.UlimitName.MEMLOCK,
+          softLimit: 128000,
+          hardLimit: 128000
+        },        
+    ]
     });
 
     for (const [key, value] of Object.entries(props.volumeMounts)) {
