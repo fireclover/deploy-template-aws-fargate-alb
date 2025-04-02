@@ -232,6 +232,7 @@ export class FargateSite extends Construct {
         cluster, 
         taskDefinition: fargateTaskDefinition,
         minHealthyPercent: 100,
+        maxHealthyPercent: scale == 1 ? 100 : (scale+1) * 100,
         securityGroups: [tasksSecurityGroup],
         desiredCount: scale,
         assignPublicIp: true,
